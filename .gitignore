@@ -1,0 +1,74 @@
+# ════════════════════════════════════════════
+#  보안 — 절대 커밋 금지
+# ════════════════════════════════════════════
+.env
+api/.env
+*.pem
+*.key
+*.p12
+*.pfx
+*_rsa
+*_ed25519
+.claude/
+
+# ════════════════════════════════════════════
+#  Python / FastAPI
+# ════════════════════════════════════════════
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# ════════════════════════════════════════════
+#  Flutter / Dart
+# ════════════════════════════════════════════
+app/build/
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/pubspec.lock
+app/android/
+app/.gradle/
+
+# Xcode / iOS (자동 생성 파일 — Mac 빌드 시 재생성됨)
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/Flutter.framework
+app/ios/Flutter/Flutter.podspec
+app/ios/Flutter/Generated.xcconfig
+app/ios/Flutter/app.flx
+app/ios/Flutter/app.zip
+app/ios/Flutter/flutter_assets/
+app/ios/Runner.xcworkspace/xcuserdata/
+app/ios/Runner.xcodeproj/xcuserdata/
+app/ios/Runner.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcworkspace
+
+# ════════════════════════════════════════════
+#  IDE
+# ════════════════════════════════════════════
+.idea/
+.vscode/
+*.iml
+*.suo
+*.user
+
+# ════════════════════════════════════════════
+#  Docker / 로그
+# ════════════════════════════════════════════
+*.log
+
+# ════════════════════════════════════════════
+#  OS
+# ════════════════════════════════════════════
+.DS_Store
+Thumbs.db
+Desktop.ini
