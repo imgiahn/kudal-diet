@@ -11,7 +11,7 @@ services:
     env_file:
       - ./api/.env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://kudal:kudal_pw@postgres:5432/kudal_db
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,15 +31,15 @@ services:
     image: postgres:16-alpine
     container_name: kudal-postgres
     environment:
-      POSTGRES_DB: kudal_db
-      POSTGRES_USER: kudal
-      POSTGRES_PASSWORD: kudal_pw
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kudal -d kudal_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10

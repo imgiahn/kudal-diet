@@ -17,22 +17,19 @@ class AppConfig {
     baseUrl: 'http://localhost:8000',
   );
 
-  // 실기기 (iPhone) — EC2 공개 IP
+  // 실기기 (iPhone) — 빌드 시 --dart-define=EC2_HOST=x.x.x.x 로 주입
+  // flutter run --dart-define=EC2_HOST=13.61.144.167
   static const development = AppConfig._(
     environment: AppEnvironment.development,
-    baseUrl: 'http://13.61.144.167:8000',
+    baseUrl: 'http://${String.fromEnvironment('EC2_HOST', defaultValue: '13.61.144.167')}:8000',
   );
 
   static const production = AppConfig._(
     environment: AppEnvironment.production,
-    baseUrl: 'https://api.kudal.app',
+    baseUrl: String.fromEnvironment('API_BASE_URL', defaultValue: 'https://api.kudal.app'),
   );
 
   // ↓↓ 환경 전환: 이 한 줄만 바꾼다 ↓↓
-  // mock       → MockRepository, 네트워크 없음
-  // simulator  → localhost:8000 (Mac 시뮬레이터)
-  // development → EC2 실기기 테스트
-  // production  → HTTPS 운영 서버
   static const current = AppConfig.development;
 
   // 로그인 없음 — 시드 유저 UUID 고정
@@ -43,7 +40,6 @@ class AppConfig {
 
   bool get isMock => environment == AppEnvironment.mock;
 
-  // 개발/시뮬레이터 모드에서 Dio 로그 활성화
   bool get isLoggingEnabled =>
       environment == AppEnvironment.development ||
       environment == AppEnvironment.simulator;
