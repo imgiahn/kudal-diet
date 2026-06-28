@@ -1,0 +1,11 @@
+# 모든 텍스트 파일: LF로 통일 (Windows CRLF 방지)
+* text=auto eol=lf
+
+# 바이너리 파일: 변환 없음
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pem binary
+*.p12 binary

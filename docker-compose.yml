@@ -1,0 +1,55 @@
+services:
+
+  # ── FastAPI 백엔드 ──────────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: kudal-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://kudal:kudal_pw@postgres:5432/kudal_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./api:/app          # 핫리로드용 (개발 환경)
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    restart: unless-stopped
+    networks:
+      - kudal-net
+
+  # ── PostgreSQL ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: kudal-postgres
+    environment:
+      POSTGRES_DB: kudal_db
+      POSTGRES_USER: kudal
+      POSTGRES_PASSWORD: kudal_pw
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kudal -d kudal_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - kudal-net
+
+volumes:
+  postgres_data:
+
+networks:
+  kudal-net:
+    driver: bridge
