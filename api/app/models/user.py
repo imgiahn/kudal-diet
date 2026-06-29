@@ -25,6 +25,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         String(255), unique=True, nullable=False, index=True
     )
     nickname: Mapped[str] = mapped_column(String(100), nullable=False)
+    kakao_id: Mapped[str | None] = mapped_column(
+        String(50), unique=True, nullable=True, index=True
+    )
     height_cm: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(10), nullable=True)

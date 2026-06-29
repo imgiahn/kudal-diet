@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import ai, calendar, daily, exercises, health, kudal, meals, uploads, weights
+from app.routers import ai, auth, calendar, daily, exercises, health, kudal, meals, uploads, users, weights
 
 # ── 로깅 설정 ────────────────────────────────────────────────
 logging.basicConfig(
@@ -68,6 +68,8 @@ async def log_requests(request: Request, call_next):
 
 
 # ── Routers ────────────────────────────────────────────────
+app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(health.router)
 app.include_router(calendar.router)
 app.include_router(daily.router)

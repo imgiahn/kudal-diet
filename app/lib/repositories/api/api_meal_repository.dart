@@ -1,5 +1,4 @@
 import 'dart:io';
-import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../models/meal.dart';
@@ -17,7 +16,6 @@ class ApiMealRepository implements MealRepository {
   @override
   Future<List<MealSection>> getMealsByDate(DateTime date) async {
     final json = await _client.get(ApiEndpoints.daily, queryParams: {
-      'user_id': AppConfig.userId,
       'date': _dateStr(date),
     });
     final rawMeals = json['meals'] as List<dynamic>;
@@ -41,7 +39,6 @@ class ApiMealRepository implements MealRepository {
   @override
   Future<MacroNutrient> getDailyMacro(DateTime date) async {
     final json = await _client.get(ApiEndpoints.daily, queryParams: {
-      'user_id': AppConfig.userId,
       'date': _dateStr(date),
     });
     final summary = json['summary'] as Map<String, dynamic>?;
@@ -71,7 +68,6 @@ class ApiMealRepository implements MealRepository {
     String? imageUrl,
   }) async {
     await _client.post(ApiEndpoints.meals, body: {
-      'user_id': AppConfig.userId,
       'meal_type': type.apiKey,
       'meal_date': _dateStr(date),
       if (imageUrl != null) 'image_url': imageUrl,
@@ -86,10 +82,7 @@ class ApiMealRepository implements MealRepository {
 
   @override
   Future<void> deleteMealItem(String itemId) async {
-    await _client.delete(
-      ApiEndpoints.deleteMealItem(itemId),
-      queryParams: {'user_id': AppConfig.userId},
-    );
+    await _client.delete(ApiEndpoints.deleteMealItem(itemId));
   }
 
   @override
@@ -101,7 +94,7 @@ class ApiMealRepository implements MealRepository {
       'carb_g': updated.carb,
       'protein_g': updated.protein,
       'fat_g': updated.fat,
-    }, queryParams: {'user_id': AppConfig.userId});
+    });
   }
 
   @override
@@ -109,7 +102,7 @@ class ApiMealRepository implements MealRepository {
     final json = await _client.postMultipart(
       ApiEndpoints.analyzeMealUpload,
       file: imageFile,
-      fields: {'user_id': AppConfig.userId},
+      fields: {},
     );
     final foods = (json['foods'] as List<dynamic>)
         .map((f) => Meal.fromApiFood(f as Map<String, dynamic>))

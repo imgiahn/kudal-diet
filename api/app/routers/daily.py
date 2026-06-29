@@ -1,4 +1,3 @@
-import uuid
 from datetime import date as date_type
 
 from fastapi import APIRouter, Depends, Query
@@ -6,8 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_user_or_404
+from app.core.dependencies import get_current_user
 from app.models.exercise import Exercise
+from app.models.user import User
 from app.models.weight import Weight
 from app.repositories.kudal_repository import KudalRepository
 from app.repositories.meal_repository import MealRepository
@@ -23,20 +23,20 @@ router = APIRouter(prefix="/api/v1/daily", tags=["daily"])
 
 @router.get("", response_model=DailyDetailResponse)
 async def get_daily(
-    user_id: uuid.UUID = Query(...),
     date: date_type = Query(...),
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> DailyDetailResponse:
-    await get_user_or_404(session, user_id)
+    uid = current_user.id
 
-    summary = await SummaryRepository(session).get_by_date(user_id, date)
-    meals = await MealRepository(session).get_by_date(user_id, date)
+    summary = await SummaryRepository(session).get_by_date(uid, date)
+    meals = await MealRepository(session).get_by_date(uid, date)
 
     weights = list(
         (
             await session.execute(
                 select(Weight)
-                .where(Weight.user_id == user_id, Weight.record_date == date)
+                .where(Weight.user_id == uid, Weight.record_date == date)
                 .order_by(Weight.created_at)
             )
         ).scalars()
@@ -45,12 +45,12 @@ async def get_daily(
         (
             await session.execute(
                 select(Exercise)
-                .where(Exercise.user_id == user_id, Exercise.record_date == date)
+                .where(Exercise.user_id == uid, Exercise.record_date == date)
                 .order_by(Exercise.created_at)
             )
         ).scalars()
     )
-    kudal = await KudalRepository(session).get_by_user(user_id)
+    kudal = await KudalRepository(session).get_by_user(uid)
 
     return DailyDetailResponse(
         date=date,

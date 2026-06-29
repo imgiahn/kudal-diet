@@ -2,13 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'core/config/app_config.dart';
+import 'providers/auth_providers.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/record_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/kudal_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  KakaoSdk.init(nativeAppKey: AppConfig.kakaoNativeAppKey);
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -16,7 +23,6 @@ void main() {
     ),
   );
   runApp(
-    // ProviderScope가 Riverpod의 루트 — 반드시 최상단에 위치
     const ProviderScope(child: KudalApp()),
   );
 }
@@ -40,8 +46,25 @@ class KudalApp extends StatelessWidget {
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
       ),
-      home: const MainNavigator(),
+      home: const AuthGate(),
     );
+  }
+}
+
+class AuthGate extends ConsumerWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider);
+
+    return switch (auth.status) {
+      AuthStatus.loading => const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      AuthStatus.unauthenticated => const LoginScreen(),
+      AuthStatus.authenticated => const MainNavigator(),
+    };
   }
 }
 

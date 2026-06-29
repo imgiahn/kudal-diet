@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class WeightCreate(BaseModel):
-    user_id: uuid.UUID
     weight_kg: float = Field(gt=0, le=500)
     record_date: date
 

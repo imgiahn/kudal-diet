@@ -1,4 +1,3 @@
-import uuid
 from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,7 +16,6 @@ class MealItemCreate(BaseModel):
 
 
 class MealCreate(BaseModel):
-    user_id: uuid.UUID
     meal_type: MealType
     meal_date: date
     image_url: str | None = None

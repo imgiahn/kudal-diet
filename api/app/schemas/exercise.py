@@ -5,7 +5,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ExerciseCreate(BaseModel):
-    user_id: uuid.UUID
     exercise_name: str = Field(min_length=1, max_length=200)
     burn_kcal: int = Field(ge=0)
     minutes: int = Field(ge=0)

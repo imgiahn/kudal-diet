@@ -1,10 +1,10 @@
 import 'package:intl/intl.dart';
-import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../models/daily_summary.dart';
 import '../../models/weekly_stats.dart';
 import '../stats_repository.dart';
+import '../../core/config/app_config.dart';
 
 class ApiStatsRepository implements StatsRepository {
   const ApiStatsRepository(this._client);
@@ -14,7 +14,6 @@ class ApiStatsRepository implements StatsRepository {
   @override
   Future<List<DailySummary>> getCalendarData(int year, int month) async {
     final json = await _client.get(ApiEndpoints.calendar, queryParams: {
-      'user_id': AppConfig.userId,
       'year': year.toString(),
       'month': month.toString(),
     });
@@ -28,14 +27,12 @@ class ApiStatsRepository implements StatsRepository {
     final now = DateTime.now();
     final fmt = DateFormat('yyyy-MM-dd');
 
-    // 캘린더 + 쿠달이 병렬 호출
     final results = await Future.wait<Map<String, dynamic>>([
       _client.get(ApiEndpoints.calendar, queryParams: {
-        'user_id': AppConfig.userId,
         'year': now.year.toString(),
         'month': now.month.toString(),
       }),
-      _client.get(ApiEndpoints.kudal, queryParams: {'user_id': AppConfig.userId}),
+      _client.get(ApiEndpoints.kudal),
     ]);
 
     final calDays = (results[0]['days'] as List<dynamic>).cast<Map<String, dynamic>>();

@@ -29,7 +29,6 @@ class AnalysisResult(BaseModel):
 
 
 class AnalyzeMealRequest(BaseModel):
-    user_id: uuid.UUID
     image_url: str = Field(min_length=10, description="R2에 업로드된 이미지 공개 URL")
 
     @field_validator("image_url")

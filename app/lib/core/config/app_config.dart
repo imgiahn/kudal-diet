@@ -30,12 +30,13 @@ class AppConfig {
   );
 
   // ↓↓ 환경 전환: 이 한 줄만 바꾼다 ↓↓
-  static const current = AppConfig.mock;
+  static const current = AppConfig.development;
 
-  // 로그인 없음 — 시드 유저 UUID 고정
-  static const userId = 'a3cc4044-4a6b-4613-bccc-fd3881de2484';
+  // 빌드 시 --dart-define=KAKAO_NATIVE_APP_KEY=abc123 주입
+  static const kakaoNativeAppKey =
+      String.fromEnvironment('KAKAO_NATIVE_APP_KEY', defaultValue: 'YOUR_KAKAO_NATIVE_APP_KEY');
 
-  // 시드 유저 일일 칼로리 목표
+  // 목표 칼로리 기본값
   static const targetCalories = 1800;
 
   bool get isMock => environment == AppEnvironment.mock;

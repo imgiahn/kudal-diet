@@ -1,4 +1,3 @@
-import '../../core/config/app_config.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../models/kudal_status.dart';
@@ -11,15 +10,12 @@ class ApiKudalRepository implements KudalRepository {
 
   @override
   Future<KudalStatus> getKudalStatus() async {
-    final json = await _client.get(ApiEndpoints.kudal, queryParams: {
-      'user_id': AppConfig.userId,
-    });
+    final json = await _client.get(ApiEndpoints.kudal);
     return KudalStatus.fromJson(json);
   }
 
   @override
   Future<KudalStatus> petKudal() async {
-    // FastAPI에 pet 엔드포인트 없음 → 현재 상태 반환
     return getKudalStatus();
   }
 

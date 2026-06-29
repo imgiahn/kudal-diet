@@ -1,10 +1,9 @@
-import uuid
-
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_user_or_404
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.repositories.kudal_repository import KudalRepository
 from app.schemas.kudal import KudalResponse
 
@@ -13,16 +12,10 @@ router = APIRouter(prefix="/api/v1/kudal", tags=["kudal"])
 
 @router.get("", response_model=KudalResponse)
 async def get_kudal(
-    user_id: uuid.UUID = Query(...),
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> KudalResponse:
-    await get_user_or_404(session, user_id)
-
-    kudal = await KudalRepository(session).get_by_user(user_id)
+    kudal = await KudalRepository(session).get_by_user(current_user.id)
     if not kudal:
-        raise HTTPException(
-            status_code=404,
-            detail="Kudal state not found. Run seed script first.",
-        )
-
+        raise HTTPException(status_code=404, detail="Kudal state not found.")
     return KudalResponse.model_validate(kudal)

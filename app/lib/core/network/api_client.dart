@@ -1,16 +1,21 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import '../auth/token_storage.dart';
 import '../config/app_config.dart';
 
 class ApiClient {
-  ApiClient({required AppConfig config}) {
+  ApiClient({required AppConfig config, TokenStorage? tokenStorage}) {
+    _tokenStorage = tokenStorage ?? TokenStorage();
     _dio = Dio(BaseOptions(
       baseUrl: config.baseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 60),
       headers: {'Content-Type': 'application/json'},
     ));
+
+    // JWT 인터셉터 — 모든 요청에 Authorization 헤더 자동 추가
+    _dio.interceptors.add(_AuthInterceptor(_tokenStorage));
 
     if (config.isLoggingEnabled) {
       _dio.interceptors.add(LogInterceptor(
@@ -23,11 +28,12 @@ class ApiClient {
       ));
     }
 
-    // 요청/응답 시간 로그
     if (config.isLoggingEnabled) {
       _dio.interceptors.add(_TimingInterceptor());
     }
   }
+
+  late final TokenStorage _tokenStorage;
 
   late final Dio _dio;
 
@@ -124,6 +130,31 @@ class ApiClient {
       500 => Exception('서버 오류가 발생했어요. 잠시 후 다시 시도해주세요.'),
       _ => Exception('오류가 발생했어요. 다시 시도해볼까요?'),
     };
+  }
+}
+
+class _AuthInterceptor extends Interceptor {
+  _AuthInterceptor(this._storage);
+  final TokenStorage _storage;
+
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    final token = await _storage.getToken();
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    if (err.response?.statusCode == 401) {
+      await _storage.clear();
+    }
+    handler.next(err);
   }
 }
 

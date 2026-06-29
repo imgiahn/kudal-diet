@@ -1,10 +1,9 @@
-import uuid
-
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_user_or_404
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.repositories.summary_repository import SummaryRepository
 from app.schemas.calendar import CalendarDaySchema, CalendarResponse
 
@@ -13,14 +12,13 @@ router = APIRouter(prefix="/api/v1/calendar", tags=["calendar"])
 
 @router.get("", response_model=CalendarResponse)
 async def get_calendar(
-    user_id: uuid.UUID = Query(...),
     year: int = Query(..., ge=2020, le=2100),
     month: int = Query(..., ge=1, le=12),
+    current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db),
 ) -> CalendarResponse:
-    await get_user_or_404(session, user_id)
     summaries = await SummaryRepository(session).get_month_summaries(
-        user_id, year, month
+        current_user.id, year, month
     )
     days = [
         CalendarDaySchema(

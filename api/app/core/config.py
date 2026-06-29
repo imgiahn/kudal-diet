@@ -18,9 +18,10 @@ class Settings(BaseSettings):
     # ── CORS ───────────────────────────────────────────────
     allowed_origins: List[str] = ["*"]
 
-    # ── 보안 (나중에 JWT 연동) ──────────────────────────────
-    secret_key: str = "change-me-in-production"
-    access_token_expire_minutes: int = 60 * 24 * 7  # 7일
+    # ── JWT ────────────────────────────────────────────────
+    jwt_secret: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 60 * 24 * 30  # 30일
 
     # ── Cloudflare R2 ───────────────────────────────────────
     r2_endpoint: str | None = None
