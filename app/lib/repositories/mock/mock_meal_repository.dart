@@ -42,7 +42,10 @@ class MockMealRepository implements MealRepository {
   @override
   Future<MacroNutrient> getDailyMacro(DateTime date) async {
     final sections = await getMealsByDate(date);
-    return sections.fold(const MacroNutrient.zero(), (total, s) => total + s.totalMacro);
+    return sections.fold<MacroNutrient>(
+      const MacroNutrient.zero(),
+      (total, s) => total + s.totalMacro,
+    );
   }
 
   @override

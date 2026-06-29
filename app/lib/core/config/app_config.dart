@@ -30,7 +30,7 @@ class AppConfig {
   );
 
   // ↓↓ 환경 전환: 이 한 줄만 바꾼다 ↓↓
-  static const current = AppConfig.development;
+  static const current = AppConfig.mock;
 
   // 로그인 없음 — 시드 유저 UUID 고정
   static const userId = 'a3cc4044-4a6b-4613-bccc-fd3881de2484';
