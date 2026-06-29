@@ -7,6 +7,7 @@ import '../models/user.dart';
 import '../providers/user_providers.dart';
 import '../providers/meal_providers.dart';
 import '../providers/stats_providers.dart';
+import '../providers/kudal_providers.dart';
 import '../widgets/kudal_card.dart';
 import '../widgets/macro_summary_card.dart';
 
@@ -38,6 +39,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserProvider);
     final macroAsync = ref.watch(todayMacroProvider);
+    final kudalAsync = ref.watch(kudalProvider);
     final calendarAsync = ref.watch(
       calendarDataProvider((_focusedDay.year, _focusedDay.month)),
     );
@@ -51,7 +53,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              _buildHeader(userAsync),
+              _buildHeader(userAsync, kudalAsync),
               const SizedBox(height: 20),
               _buildCalendar(calendarAsync),
               const SizedBox(height: 16),
@@ -66,8 +68,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildHeader(AsyncValue<User> userAsync) {
+  Widget _buildHeader(AsyncValue<User> userAsync, AsyncValue<dynamic> kudalAsync) {
     final name = userAsync.whenOrNull(data: (u) => u.name) ?? '...';
+    final mood = kudalAsync.whenOrNull(data: (k) => k.mood as String) ?? '';
+    final message = kudalAsync.whenOrNull(data: (k) => k.message as String) ?? '오늘도 화이팅!';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -94,7 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
-        const KudalCard(message: '오늘 단백질 굿!', size: 72),
+        KudalCard(message: message, size: 72, mood: mood),
       ],
     );
   }

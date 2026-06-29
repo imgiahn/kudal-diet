@@ -41,8 +41,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             children: [
               const Spacer(flex: 2),
               // 캐릭터 + 타이틀
-              const Text('🐾', style: TextStyle(fontSize: 80)),
-              const SizedBox(height: 16),
+              Image.asset(
+                'assets/images/character/kudal_hello.png',
+                width: 160,
+                height: 160,
+              ),
+              const SizedBox(height: 8),
               const Text(
                 '쿠달이',
                 style: TextStyle(

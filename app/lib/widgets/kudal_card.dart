@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 
+String kudalImagePath(String mood) => switch (mood) {
+      'happy' => 'assets/images/character/kudal_excited.png',
+      'normal' => 'assets/images/character/kudal_love.png',
+      'sad' => 'assets/images/character/kudal_relaxed.png',
+      'sleepy' => 'assets/images/character/kudal_hello.png',
+      _ => 'assets/images/character/kudal_happy.png',
+    };
+
 class KudalCard extends StatelessWidget {
   final String message;
   final double size;
+  final String mood;
 
   const KudalCard({
     super.key,
     this.message = '오늘도 화이팅! 쿠달이가 응원해!',
     this.size = 120,
+    this.mood = '',
   });
 
   @override
@@ -15,7 +25,7 @@ class KudalCard extends StatelessWidget {
     return Column(
       children: [
         if (size > 0) ...[
-          _KudalAvatar(size: size),
+          _KudalAvatar(size: size, mood: mood),
           const SizedBox(height: 12),
         ],
         _SpeechBubble(message: message),
@@ -26,7 +36,8 @@ class KudalCard extends StatelessWidget {
 
 class _KudalAvatar extends StatelessWidget {
   final double size;
-  const _KudalAvatar({required this.size});
+  final String mood;
+  const _KudalAvatar({required this.size, required this.mood});
 
   @override
   Widget build(BuildContext context) {
@@ -43,14 +54,8 @@ class _KudalAvatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: Image.asset(
-          'assets/images/kudal.png',
+          kudalImagePath(mood),
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Center(
-            child: Text(
-              '🐾',
-              style: TextStyle(fontSize: size * 0.4),
-            ),
-          ),
         ),
       ),
     );

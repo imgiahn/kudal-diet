@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/kudal_status.dart';
 import '../providers/kudal_providers.dart';
+import '../widgets/kudal_card.dart';
 
 class KudalScreen extends ConsumerStatefulWidget {
   const KudalScreen({super.key});
@@ -148,11 +149,8 @@ class _KudalScreenState extends ConsumerState<KudalScreen>
                   ),
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/images/kudal.png',
+                      kudalImagePath(status.mood),
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Text('🐾', style: TextStyle(fontSize: 60)),
-                      ),
                     ),
                   ),
                 ),
@@ -335,9 +333,17 @@ class _MoodBadge extends StatelessWidget {
   const _MoodBadge({required this.mood});
 
   static const _moodEmoji = {
-    '만족': '😊',
-    '행복': '🥰',
-    '응원': '💪',
+    'happy': '🎉',
+    'normal': '💪',
+    'sad': '🫶',
+    'sleepy': '👋',
+  };
+
+  static const _moodLabel = {
+    'happy': '아주 잘했어!',
+    'normal': '괜찮아!',
+    'sad': '내일 다시!',
+    'sleepy': '기록해봐!',
   };
 
   @override
@@ -355,7 +361,7 @@ class _MoodBadge extends StatelessWidget {
           Text(_moodEmoji[mood] ?? '😊', style: const TextStyle(fontSize: 14)),
           const SizedBox(width: 4),
           Text(
-            mood,
+            _moodLabel[mood] ?? mood,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
