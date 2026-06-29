@@ -58,18 +58,23 @@ class ApiClient {
   Future<Map<String, dynamic>> patch(
     String path, {
     required Map<String, dynamic> body,
+    Map<String, dynamic>? queryParams,
   }) async {
     try {
-      final res = await _dio.patch(path, data: body);
+      final res = await _dio.patch(
+        path,
+        data: body,
+        queryParameters: queryParams,
+      );
       return res.data as Map<String, dynamic>;
     } on DioException catch (e) {
       throw _toException(e);
     }
   }
 
-  Future<void> delete(String path) async {
+  Future<void> delete(String path, {Map<String, dynamic>? queryParams}) async {
     try {
-      await _dio.delete(path);
+      await _dio.delete(path, queryParameters: queryParams);
     } on DioException catch (e) {
       throw _toException(e);
     }

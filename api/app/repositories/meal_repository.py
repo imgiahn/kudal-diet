@@ -56,3 +56,34 @@ class MealRepository:
     async def delete(self, meal: Meal) -> None:
         await self._s.delete(meal)
         await self._s.flush()
+
+    async def get_item_by_id(self, item_id: uuid.UUID) -> MealItem | None:
+        from sqlalchemy.orm import joinedload
+        stmt = (
+            select(MealItem)
+            .where(MealItem.id == item_id)
+            .options(joinedload(MealItem.meal))
+        )
+        result = await self._s.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def delete_item(self, item: MealItem) -> None:
+        await self._s.delete(item)
+        await self._s.flush()
+
+    async def update_item(self, item: MealItem, data: dict) -> MealItem:
+        for key, value in data.items():
+            if value is not None:
+                setattr(item, key, value)
+        await self._s.flush()
+        return item
+
+    async def recalculate_meal_totals(self, meal: Meal) -> None:
+        stmt = select(MealItem).where(MealItem.meal_id == meal.id)
+        result = await self._s.execute(stmt)
+        items = list(result.scalars().all())
+        meal.total_kcal = sum(i.kcal for i in items)
+        meal.total_carb_g = sum(float(i.carb_g) for i in items)
+        meal.total_protein_g = sum(float(i.protein_g) for i in items)
+        meal.total_fat_g = sum(float(i.fat_g) for i in items)
+        await self._s.flush()

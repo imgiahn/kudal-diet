@@ -8,7 +8,7 @@ from app.core.dependencies import get_user_or_404
 from app.models.daily_summary import DayStatus
 from app.repositories.meal_repository import MealRepository
 from app.repositories.summary_repository import SummaryRepository
-from app.schemas.meal import MealCreate, MealCreateResponse
+from app.schemas.meal import MealCreate, MealCreateResponse, MealItemUpdate, MealItemResponse
 from app.services.kudal_service import update_after_meal
 from app.services.summary_service import recalculate_and_save
 
@@ -71,3 +71,51 @@ async def delete_meal(
 
     # daily_summary 재계산 (삭제 후 합계 갱신)
     await recalculate_and_save(session, user_id, meal_date)
+
+
+# ── meal-items (단건 음식 수정/삭제) ───────────────────────────
+
+item_router = APIRouter(prefix="/api/v1/meal-items", tags=["meal-items"])
+
+
+@item_router.delete("/{item_id}", status_code=204)
+async def delete_meal_item(
+    item_id: uuid.UUID,
+    user_id: uuid.UUID = Query(...),
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    await get_user_or_404(session, user_id)
+
+    repo = MealRepository(session)
+    item = await repo.get_item_by_id(item_id)
+    if not item or item.meal.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    meal = item.meal
+    meal_date = meal.meal_date
+    await repo.delete_item(item)
+    await repo.recalculate_meal_totals(meal)
+    await recalculate_and_save(session, user_id, meal_date)
+
+
+@item_router.patch("/{item_id}", response_model=MealItemResponse)
+async def update_meal_item(
+    item_id: uuid.UUID,
+    body: MealItemUpdate,
+    user_id: uuid.UUID = Query(...),
+    session: AsyncSession = Depends(get_db),
+) -> MealItemResponse:
+    await get_user_or_404(session, user_id)
+
+    repo = MealRepository(session)
+    item = await repo.get_item_by_id(item_id)
+    if not item or item.meal.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    meal = item.meal
+    meal_date = meal.meal_date
+    updated = await repo.update_item(item, body.model_dump(exclude_none=True))
+    await repo.recalculate_meal_totals(meal)
+    await recalculate_and_save(session, user_id, meal_date)
+
+    return MealItemResponse.model_validate(updated)

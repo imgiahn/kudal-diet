@@ -24,8 +24,14 @@ abstract class MealRepository {
     String? imageUrl,
   });
 
-  /// 식사 삭제
+  /// 식사 그룹 전체 삭제
   Future<void> deleteMeal(String mealId);
+
+  /// 음식 단건 삭제
+  Future<void> deleteMealItem(String itemId);
+
+  /// 음식 단건 수정
+  Future<void> updateMealItem(String itemId, Meal updated);
 
   /// AI 이미지 분석 → 분석 결과 반환
   Future<MealAnalysisResult> analyzeImage(File imageFile);

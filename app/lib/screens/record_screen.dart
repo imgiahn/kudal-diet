@@ -6,6 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import '../models/meal.dart';
 import '../models/macro_nutrient.dart';
 import '../providers/meal_providers.dart';
+import '../providers/kudal_providers.dart';
+import '../providers/repository_providers.dart';
+import '../providers/stats_providers.dart';
 
 class RecordScreen extends ConsumerWidget {
   const RecordScreen({super.key});
@@ -232,12 +235,65 @@ class _EmptyState extends StatelessWidget {
 
 // ── 식사 섹션 ────────────────────────────────────────────────
 
-class _MealSection extends StatelessWidget {
+class _MealSection extends ConsumerWidget {
   final MealSection section;
   const _MealSection({required this.section});
 
+  Future<void> _onDelete(BuildContext context, WidgetRef ref, Meal meal) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('삭제할까요?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        content: Text('${meal.name}을(를) 삭제합니다.', style: const TextStyle(fontSize: 14)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('삭제', style: TextStyle(color: Color(0xFFFF6B6B))),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await ref.read(mealRepositoryProvider).deleteMealItem(meal.id);
+      ref.invalidate(mealsProvider);
+      ref.invalidate(todayMacroProvider);
+      ref.invalidate(calendarDataProvider);
+      ref.invalidate(weeklyStatsProvider);
+      ref.invalidate(kudalProvider);
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('삭제에 실패했어요. 다시 시도해 주세요.')),
+      );
+    }
+  }
+
+  Future<void> _onEdit(BuildContext context, WidgetRef ref, Meal meal) async {
+    final updated = await showDialog<Meal>(
+      context: context,
+      builder: (ctx) => _SavedFoodEditDialog(meal: meal),
+    );
+    if (updated == null || !context.mounted) return;
+    try {
+      await ref.read(mealRepositoryProvider).updateMealItem(meal.id, updated);
+      ref.invalidate(mealsProvider);
+      ref.invalidate(todayMacroProvider);
+      ref.invalidate(calendarDataProvider);
+      ref.invalidate(weeklyStatsProvider);
+      ref.invalidate(kudalProvider);
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('수정에 실패했어요. 다시 시도해 주세요.')),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -281,7 +337,11 @@ class _MealSection extends StatelessWidget {
           ),
           if (section.meals.isNotEmpty) ...[
             const SizedBox(height: 12),
-            ...section.meals.map((m) => _FoodRow(meal: m)),
+            ...section.meals.map((m) => _FoodRow(
+                  meal: m,
+                  onDelete: () => _onDelete(context, ref, m),
+                  onEdit: () => _onEdit(context, ref, m),
+                )),
           ] else ...[
             const SizedBox(height: 10),
             Text(
@@ -326,30 +386,154 @@ class _MealIcon extends StatelessWidget {
 
 class _FoodRow extends StatelessWidget {
   final Meal meal;
-  const _FoodRow({required this.meal});
+  final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+
+  const _FoodRow({required this.meal, this.onDelete, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
+    return Dismissible(
+      key: ValueKey(meal.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        onDelete?.call();
+        return false; // 실제 dismiss는 provider 갱신 후 자동으로 처리
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF6B6B).withOpacity(0.15),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.delete_rounded, color: Color(0xFFFF6B6B), size: 20),
+      ),
+      child: GestureDetector(
+        onTap: onEdit,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              const Icon(Icons.circle, size: 5, color: Color(0xFFE8D5C4)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${meal.name}${meal.amount.isNotEmpty ? ' ${meal.amount}' : ''}',
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF3A2E2A)),
+                ),
+              ),
+              Text(
+                '${meal.calories} kcal',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: const Color(0xFF3A2E2A).withOpacity(0.5),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded,
+                  size: 14, color: const Color(0xFF3A2E2A).withOpacity(0.25)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── 저장된 식사 수정 다이얼로그 ──────────────────────────────────
+
+class _SavedFoodEditDialog extends StatefulWidget {
+  final Meal meal;
+  const _SavedFoodEditDialog({required this.meal});
+
+  @override
+  State<_SavedFoodEditDialog> createState() => _SavedFoodEditDialogState();
+}
+
+class _SavedFoodEditDialogState extends State<_SavedFoodEditDialog> {
+  late final TextEditingController _name;
+  late final TextEditingController _weight;
+  late final TextEditingController _kcal;
+  late final TextEditingController _carb;
+  late final TextEditingController _protein;
+  late final TextEditingController _fat;
+
+  @override
+  void initState() {
+    super.initState();
+    final m = widget.meal;
+    _name = TextEditingController(text: m.name);
+    _weight = TextEditingController(text: m.weightG > 0 ? m.weightG.toStringAsFixed(0) : '');
+    _kcal = TextEditingController(text: m.calories.toString());
+    _carb = TextEditingController(text: m.carb.toString());
+    _protein = TextEditingController(text: m.protein.toString());
+    _fat = TextEditingController(text: m.fat.toString());
+  }
+
+  @override
+  void dispose() {
+    for (final c in [_name, _weight, _kcal, _carb, _protein, _fat]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('음식 수정', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _field('음식 이름', _name),
+            _field('중량 (g)', _weight, isNum: true),
+            _field('칼로리 (kcal)', _kcal, isNum: true),
+            _field('탄수화물 (g)', _carb, isNum: true),
+            _field('단백질 (g)', _protein, isNum: true),
+            _field('지방 (g)', _fat, isNum: true),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('취소')),
+        TextButton(
+          onPressed: () {
+            final wg = double.tryParse(_weight.text) ?? 0.0;
+            Navigator.pop(
+              context,
+              widget.meal.copyWith(
+                name: _name.text.trim(),
+                amount: wg > 0 ? '${wg.toInt()}g' : widget.meal.amount,
+                weightG: wg,
+                calories: int.tryParse(_kcal.text) ?? widget.meal.calories,
+                carb: double.tryParse(_carb.text) ?? widget.meal.carb,
+                protein: double.tryParse(_protein.text) ?? widget.meal.protein,
+                fat: double.tryParse(_fat.text) ?? widget.meal.fat,
+              ),
+            );
+          },
+          child: const Text('저장', style: TextStyle(color: Color(0xFFF4A7B9), fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+
+  Widget _field(String label, TextEditingController ctrl, {bool isNum = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          const Icon(Icons.circle, size: 5, color: Color(0xFFE8D5C4)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '${meal.name} ${meal.amount}',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF3A2E2A)),
-            ),
-          ),
-          Text(
-            '${meal.calories} kcal',
-            style: TextStyle(
-              fontSize: 12,
-              color: const Color(0xFF3A2E2A).withOpacity(0.5),
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.only(bottom: 8),
+      child: TextField(
+        controller: ctrl,
+        keyboardType: isNum ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: label,
+          isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        ),
+        style: const TextStyle(fontSize: 13),
       ),
     );
   }

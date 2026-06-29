@@ -51,6 +51,15 @@ class MealResponse(BaseModel):
     items: list[MealItemResponse]
 
 
+class MealItemUpdate(BaseModel):
+    food_name: str | None = None
+    weight_g: float | None = None
+    kcal: int | None = Field(default=None, ge=0)
+    carb_g: float | None = None
+    protein_g: float | None = None
+    fat_g: float | None = None
+
+
 class MealCreateResponse(BaseModel):
     meal_id: uuid.UUID
     message: str = "meal saved"

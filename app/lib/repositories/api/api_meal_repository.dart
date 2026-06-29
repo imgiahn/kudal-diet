@@ -85,6 +85,26 @@ class ApiMealRepository implements MealRepository {
   }
 
   @override
+  Future<void> deleteMealItem(String itemId) async {
+    await _client.delete(
+      ApiEndpoints.deleteMealItem(itemId),
+      queryParams: {'user_id': AppConfig.userId},
+    );
+  }
+
+  @override
+  Future<void> updateMealItem(String itemId, Meal updated) async {
+    await _client.patch(ApiEndpoints.updateMealItem(itemId), body: {
+      'food_name': updated.name,
+      if (updated.weightG > 0) 'weight_g': updated.weightG,
+      'kcal': updated.calories,
+      'carb_g': updated.carb,
+      'protein_g': updated.protein,
+      'fat_g': updated.fat,
+    }, queryParams: {'user_id': AppConfig.userId});
+  }
+
+  @override
   Future<MealAnalysisResult> analyzeImage(File imageFile) async {
     final json = await _client.postMultipart(
       ApiEndpoints.analyzeMealUpload,

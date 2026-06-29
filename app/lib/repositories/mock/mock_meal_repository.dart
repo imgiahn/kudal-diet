@@ -82,6 +82,26 @@ class MockMealRepository implements MealRepository {
   }
 
   @override
+  Future<void> deleteMealItem(String itemId) async {
+    for (final key in _store.keys) {
+      _store[key] = _store[key]!.map((s) {
+        final filtered = s.meals.where((m) => m.id != itemId).toList();
+        return s.copyWith(meals: filtered);
+      }).toList();
+    }
+  }
+
+  @override
+  Future<void> updateMealItem(String itemId, Meal updated) async {
+    for (final key in _store.keys) {
+      _store[key] = _store[key]!.map((s) {
+        final meals = s.meals.map((m) => m.id == itemId ? updated : m).toList();
+        return s.copyWith(meals: meals);
+      }).toList();
+    }
+  }
+
+  @override
   Future<MealAnalysisResult> analyzeImage(File imageFile) async {
     await Future.delayed(const Duration(milliseconds: 800));
     return const MealAnalysisResult(
