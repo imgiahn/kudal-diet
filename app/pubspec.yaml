@@ -1,5 +1,5 @@
 name: kudal_diet
-description: 쿠달이 - 캐릭터 기반 다이어트 기록 앱
+description: 먹을까말까 - 쿠달이와 함께하는 AI 식단 기록 앱
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -24,8 +24,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: false
+  ios: true
+  image_path: "assets/images/character/kudal_happy.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/character/
