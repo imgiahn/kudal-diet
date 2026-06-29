@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "001_kakao_auth"
-down_revision = None
+down_revision = "8ef417847182"
 branch_labels = None
 depends_on = None
 
